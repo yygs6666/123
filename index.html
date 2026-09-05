@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MITB 人格测试 - 大五人格科学测评</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236c5ce7'/><text x='50' y='68' font-size='52' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>M</text></svg>">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== 开始界面 ===== -->
+  <div class="page active" id="page-start">
+    <div class="start-card">
+      <div class="logo-icon">M</div>
+      <h1 id="start-title">MITB 人格测试</h1>
+      <p class="subtitle">基于 IPIP 大五人格量表 (OCEAN)<br>70 道科学测评题目，AI 深度分析你的人格画像</p>
+
+      <div class="feature-tags">
+        <span class="feature-tag">IPIP 量表</span>
+        <span class="feature-tag">5 大维度</span>
+        <span class="feature-tag">5 点 Likert 计分</span>
+        <span class="feature-tag">常模对比</span>
+        <span class="feature-tag">AI 深度分析</span>
+      </div>
+
+      <div class="info-box">
+        <p>本测试采用 International Personality Item Pool (IPIP) 公共领域量表，基于大五人格模型 (Big Five / OCEAN)，通过 <strong>开放性 (O)</strong>、<strong>尽责性 (C)</strong>、<strong>外向性 (E)</strong>、<strong>宜人性 (A)</strong>、<strong>神经质 (N)</strong> 五个维度科学评估你的人格特征。</p>
+        <p style="margin-top:8px">每维度 14 题，共 70 题。测试结果将与常模数据对比，给出百分位排名。测试结束后可配置 AI 模型 API 获取<strong>引用心理学理论的专属分析报告</strong>。</p>
+      </div>
+
+      <div class="disclaimer-box">
+        <strong>免责声明</strong>
+        <p>本测试基于公开领域的 IPIP 量表，仅供自我探索和学术参考使用，<strong>不构成心理诊断或医疗建议</strong>。如有心理健康方面的困扰，请咨询持有执业资格的心理咨询师或精神科医师。</p>
+      </div>
+
+      <button class="btn btn-primary" onclick="startQuiz()">开始测试</button>
+    </div>
+  </div>
+
+  <!-- ===== 答题界面 ===== -->
+  <div class="page" id="page-quiz">
+    <div class="quiz-header">
+      <div class="quiz-top-bar">
+        <div class="quiz-counter">第 <span id="current-q">1</span> / 70 题</div>
+        <div class="quiz-counter">已完成 <span id="answered-count">0</span> 题</div>
+        <div class="quiz-counter">用时 <span id="quiz-timer">0分0秒</span></div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-number" id="q-dim-tag">能量方向</div>
+      <div class="question-text" id="q-text">题目加载中...</div>
+      <div class="options" id="q-options"></div>
+    </div>
+
+    <div class="quiz-nav">
+      <button class="btn btn-secondary" id="btn-prev" onclick="prevQuestion()">上一题</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">下一题</button>
+    </div>
+
+    <!-- 暂停按钮 -->
+    <div class="quiz-pause-btn" onclick="togglePause()">⏸ 暂停</div>
+  </div>
+
+  <!-- ===== 暂停界面 ===== -->
+  <div class="page" id="page-pause">
+    <div class="pause-card">
+      <div class="pause-icon">⏸</div>
+      <h2>测试已暂停</h2>
+      <p class="pause-hint">计时已停止，你的进度已保存</p>
+      <div class="pause-actions">
+        <button class="btn btn-primary" onclick="togglePause()">继续测试</button>
+        <button class="btn btn-danger" onclick="exitQuiz()">退出测试</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 结算界面 ===== -->
+  <div class="page" id="page-result">
+    <div class="result-card">
+      <div class="result-type-badge" id="type-badge">
+        <div class="type-code" id="type-code">OCEAN</div>
+        <div class="type-name" id="type-name">大五人格 + MBTI 映射</div>
+      </div>
+      <h2>你的测试结果</h2>
+      <p class="result-desc" id="type-desc">正在计算你的人格维度得分...</p>
+
+      <!-- 维度得分 -->
+      <div class="dimension-scores" id="dim-scores"></div>
+
+      <!-- 用时统计 -->
+      <div class="time-stats" id="time-stats"></div>
+
+      <!-- 答题回顾 -->
+      <div class="review-section" id="review-section">
+        <div class="review-toggle" onclick="toggleReview()">
+          <span>📋 查看答题回顾</span>
+          <span class="review-arrow" id="review-arrow">▼</span>
+        </div>
+        <div class="review-content" id="review-content" style="display:none;"></div>
+      </div>
+
+      <!-- API 配置 -->
+      <div class="api-config" id="api-config">
+        <div class="api-config-title">AI 分析配置</div>
+        <div class="api-config-hint no-api" id="api-hint">尚未配置 API，无法生成分析报告。请填写以下信息后点击"生成分析报告"。</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <div class="label-row">
+              <label for="api-url">API URL</label>
+              <span class="dropdown-toggle" onclick="toggleProviderList(event)">📋 选择厂商</span>
+            </div>
+            <input type="text" id="api-url" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions">
+            <div class="provider-dropdown" id="provider-dropdown" style="display:none;"></div>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="api-model">模型名称</label>
+              <span class="dropdown-toggle" onclick="toggleModelList(event)">📋 选择模型</span>
+            </div>
+            <input type="text" id="api-model" placeholder="glm-4-flash">
+            <div class="model-dropdown" id="model-dropdown" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="form-group">
+            <label for="api-key">API Key</label>
+            <input type="password" id="api-key" placeholder="智谱开放平台获取的 API Key">
+        </div>
+      </div>
+
+      <!-- 报告区域 -->
+      <div class="report-section" id="report-section"></div>
+
+      <!-- 操作按钮 -->
+      <div class="result-actions">
+        <button class="btn btn-secondary" id="btn-analyze" onclick="generateReport()">生成分析报告</button>
+        <button class="btn btn-secondary" onclick="exportResult()">导出结果</button>
+        <button class="btn btn-secondary" onclick="shareResult()">分享结果</button>
+        <button class="btn btn-secondary" onclick="restartQuiz()">重新测试</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/questions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
